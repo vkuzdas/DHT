@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+// generate directly into "java/proto"
+option java_package = "proto";
+
+message MoveKeysRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  string rangeStart = 3;
+  string rangeEnd = 4;
+}
+
+message MoveKeysResponse {
+  repeated string value = 1;
+  repeated string key = 2;
+  string status = 3;
+}
+
+message UpdateFingerTableRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  int32 index = 3;
+  string nodeIp = 4;
+  int32 nodePort = 5;
+}
+message UpdateFingerTableResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string status = 3;
+}
+
+message GetSuccessorRequest {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+}
+message GetSuccessorResponse {
+  string successorIp = 1;
+  int32 successorPort = 2;
+}
+
+message GetPredecessorRequest {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+}
+message GetPredecessorResponse {
+  string predecessorIp = 1;
+  int32 predecessorPort = 2;
+}
+
+message ClosestPrecedingFingerRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  string targetId = 3;
+}
+message ClosestPrecedingFingerResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string closestPrecedingFingerIp = 3;
+  int32 closestPrecedingFingerPort = 4;
+}
+
+message FindSuccessorRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  string targetId = 3;
+}
+message FindSuccessorResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string successorIp = 3;
+  int32 successorPort = 4;
+}
+
+// Joining node sends to BootStrap node
+message JoinRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+}
+// BootStrap node responds with status
+message JoinResponse {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  string status = 3;
+}
+
+message PutRequest {
+  string key = 1;
+  string id = 2;
+  string value = 3;
+}
+message PutResponse {
+  string key = 1;
+  string value = 2;
+  string status = 3;
+}
+
+message GetRequest {
+  string key = 1;
+  string id = 2;
+}
+message GetResponse {
+  string key = 1;
+  string value = 2;
+  string status = 3;
+}
+
+message Notification {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  string id = 3;
+}
+message NotificationResponse {}
+
+message UpdatePredecessorRequest {
+  string newIp = 1;
+  int32 newPort = 2;
+}
+message UpdatePredecessorResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string status = 3;
+}
+
+message UpdateSuccessorRequest {
+  string newIp = 1;
+  int32 newPort = 2;
+}
+message UpdateSuccessorResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string status = 3;
+}
+
+message MoveKeysToSuccessorRequest {
+  string senderIp = 1;
+  int32 senderPort = 2;
+  repeated string value = 3;
+  repeated string key = 4;
+}
+message MoveKeysToSuccessorResponse {
+  string requestorIp = 1;
+  int32 requestorPort = 2;
+  string status = 3;
+}
+
+message DeleteRequest {
+  string key = 1;
+  string id = 2;
+}
+message DeleteResponse {
+  string key = 1;
+  string status = 2;
+}
+
+message FindOfflinePredecessorRequest {
+  string initialNodeIp = 1;
+  int32 initialNodePort = 2;
+  string offlineNodeIp = 3;
+  int32 offlineNodePort = 4;
+}
+
+message FindOfflinePredecessorResponse {
+  string initialNodeIp = 1;
+  int32 initialNodePort = 2;
+  string newInitialNodeSuccessorIp = 3;
+  int32 newInitialNodeSuccessorPort = 4;
+}
+
+service ChordService {
+  // invoke findSuccessor procedure on targetNode
+  rpc FindSuccessor(FindSuccessorRequest) returns (FindSuccessorResponse) {}
+  // return targetNode.successor
+  rpc GetSuccessor(GetSuccessorRequest) returns (GetSuccessorResponse) {}
+  // return targetNode.predecessor
+  rpc GetPredecessor(GetPredecessorRequest) returns (GetPredecessorResponse) {}
+  rpc UpdateFingerTable(UpdateFingerTableRequest) returns (UpdateFingerTableResponse) {}
+  rpc ClosestPrecedingFinger(ClosestPrecedingFingerRequest) returns (ClosestPrecedingFingerResponse) {}
+  rpc Join(JoinRequest) returns (JoinResponse) {}
+
+  // upon leaving
+  rpc UpdatePredecessor(UpdatePredecessorRequest) returns (UpdatePredecessorResponse) {}
+  rpc UpdateSuccessor(UpdateSuccessorRequest) returns (UpdateSuccessorRequest) {}
+  rpc MoveKeysToSuccessor(MoveKeysToSuccessorRequest) returns (MoveKeysToSuccessorResponse) {}
+
+  // move keys from range (predecessor, node] to node
+  rpc MoveKeys(MoveKeysRequest) returns (MoveKeysResponse) {}
+
+  rpc Notify(Notification) returns (NotificationResponse) {}
+
+  rpc Put(PutRequest) returns (PutResponse) {}
+  rpc Get(GetRequest) returns (GetResponse) {}
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+
+  rpc FindOfflinePredecessor(FindOfflinePredecessorRequest) returns (FindOfflinePredecessorResponse) {}
+}

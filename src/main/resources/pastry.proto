@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+// generate directly into "java/proto"
+option java_package = "proto";
+
+message JoinRequest {
+  NodeReference sender = 1;
+}
+
+message Empty {}
+
+message JoinResponse {
+  repeated NodeState nodeState = 1;
+}
+
+message NodeState {
+  NodeReference owner = 1;
+
+  repeated NodeReference leafSet = 2;
+
+  repeated RoutingTableRow routingTable = 3;
+
+  repeated NodeReference neighborSet = 4;
+
+  repeated DHTEntry dhtEntries = 5;
+}
+
+message NewNodes {
+  repeated NodeReference nodes = 1;
+  repeated DHTEntry dhtEntries = 2;
+}
+message DHTEntry {
+  string key = 1;
+  string value = 2;
+}
+
+message RoutingTableRow {
+  repeated NodeReference routingTableEntry = 1;
+}
+
+message NodeReference {
+  string ip = 1;
+  int32 port = 2;
+  int64 x = 3;
+  int64 y = 4;
+}
+
+message NeighborSetRequest {}
+
+message NeighborSetResponse {
+  repeated NodeReference neighborSet = 1;
+}
+
+// forwarded to node that is closest to key
+// depending on Type it puts, gets or deletes the key
+message ForwardRequest {
+  string key = 1;
+  string value = 2;
+  RequestType requestType = 3;
+
+  enum RequestType {
+    PUT = 0;
+    GET = 1;
+    DELETE = 2;
+  }
+}
+message ForwardResponse {
+  string value = 1;
+  StatusCode statusCode = 2;
+  NodeReference owner = 3;
+
+  enum StatusCode {
+    SAVED = 0; // successful PUT
+    REMOVED = 1; // successful DELETE
+    RETRIEVED = 2; // successful DELETE
+    NOT_FOUND = 3; // key for DELETE not found
+  }
+}
+message MoveKeysRequest {
+  NodeReference sender = 1;
+  repeated DHTEntry dhtEntries = 2;
+}
+
+service PastryService {
+
+  rpc NotifyExistence(NodeState) returns (NewNodes) {}
+
+  // used by put,get and delete to find storing node, function similar to Join
+  rpc Forward(ForwardRequest) returns (ForwardResponse) {}
+
+  rpc Join(JoinRequest) returns (JoinResponse) {}
+
+  rpc MoveKeys(MoveKeysRequest) returns (Empty) {}
+
+  rpc GetNeighborSet(NeighborSetRequest) returns (NeighborSetResponse) {}
+  rpc Ping(Empty) returns (Empty) {}
+}

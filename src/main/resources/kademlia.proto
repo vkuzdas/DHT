@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+// generate directly into "java/proto"
+option java_package = "proto";
+
+
+message LookupRequest {
+  string targetId = 1;
+  NodeReference joiningNode = 2;
+  NodeReference sender = 3;
+}
+
+message Entry {
+  string key = 1;
+  string value = 2;
+}
+
+message LookupResponse {
+  repeated NodeReference foundNodes = 1;
+}
+
+message NodeReference {
+  string ip = 1;
+  int32 port = 2;
+  string id = 3;
+}
+
+message Empty {}
+
+message FindNodeRequest {
+  string targetId = 1;
+  NodeReference joiningNode = 2;
+  NodeReference sender = 3;
+}
+
+message FindNodeResponse {
+  repeated NodeReference kClosest = 1;
+}
+
+message RetrieveRequest {
+  string key = 1;
+  NodeReference sender = 2;
+}
+
+message RetrieveResponse {
+  string value = 1;
+  Status status = 2;
+}
+
+message StoreRequest {
+  string key = 1;
+  string value = 2;
+  NodeReference sender = 3;
+}
+
+message StoreResponse {
+  Status status = 1;
+}
+
+enum Status {
+  SUCCESS = 0;
+  NOT_FOUND = 1;
+  ERROR = 2;
+}
+
+message DeleteRequest {
+  string key = 1;
+  NodeReference sender = 2;
+}
+
+message DeleteResponse {
+  Status status = 1;
+  NodeReference sender = 2;
+}
+
+service KademliaService {
+  rpc PromptNodeLookup(LookupRequest) returns (LookupResponse) {}
+
+  rpc FindNode(FindNodeRequest) returns (FindNodeResponse) {}
+
+  rpc Retrieve(RetrieveRequest) returns (RetrieveResponse) {}
+  rpc Store(StoreRequest) returns (StoreResponse) {}
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+
+  rpc Ping(Empty) returns (Empty) {}
+}
