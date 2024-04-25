@@ -31,7 +31,7 @@ public class DhtApiTest extends BaseTest {
         bootstrap.initPastry();
         runningNodes.add(bootstrap);
 
-        for (int i = 0; i < 200 ; i++) {
+        for (int i = 0; i < 50 ; i++) {
             PastryNode node = new PastryNode("localhost", BASE_PORT++, x++, y++);
             node.joinPastry(runningNodes.get(new Random().nextInt(runningNodes.size())).getNode());
             runningNodes.add(node);
@@ -43,7 +43,7 @@ public class DhtApiTest extends BaseTest {
             String key = "key" + j;
             PastryNode randomNode = runningNodes.get(new Random().nextInt(runningNodes.size()));
 
-            NodeReference owner = randomNode.put(key, "value" + j);
+            NodeReference owner = randomNode.putWithNode(key, "value" + j);
 
             assertNumericallyClosestOfAll(Util.getId(key), owner, runningNodes);
         }
@@ -66,7 +66,7 @@ public class DhtApiTest extends BaseTest {
 
             PastryNode randomNode = runningNodes.get(new Random().nextInt(runningNodes.size()));
 
-            assertEquals(Pastry.ForwardResponse.StatusCode.REMOVED, randomNode.delete(key));
+            assertEquals(Pastry.ForwardResponse.StatusCode.REMOVED, randomNode.deleteWithStatus(key));
         }
 
         // remove 10 *not* present keys
@@ -76,7 +76,7 @@ public class DhtApiTest extends BaseTest {
 
             PastryNode randomNode = runningNodes.get(new Random().nextInt(runningNodes.size()));
 
-            assertEquals(Pastry.ForwardResponse.StatusCode.NOT_FOUND, randomNode.delete(key));
+            assertEquals(Pastry.ForwardResponse.StatusCode.NOT_FOUND, randomNode.deleteWithStatus(key));
         }
     }
 

@@ -1,6 +1,7 @@
 package kademlia;
 
 import com.google.common.annotations.VisibleForTesting;
+import dht.DHTNodeInterface;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 import static kademlia.Util.getId;
 import static kademlia.Util.randomWithinBucket;
 
-public class KademliaNode {
+public class KademliaNode implements DHTNodeInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(KademliaNode.class);
 
@@ -197,14 +198,39 @@ public class KademliaNode {
         startRefreshing();
     }
 
+    @Override
+    public void init() {
+        try {
+            initKademlia();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public String getIp() {
+        return self.getIp();
+    }
+
+    @Override
+    public int getPort() {
+        return self.getPort();
+    }
+
     private void startServer() throws IOException {
         server.start();
         logger.warn("[{}]  Server started, listening on {}", self, self.port);
     }
 
+    @Override
     public void leave() {
         logger.warn("[{}]  Leaves the network", self);
         shutdownKademliaNode();
+    }
+
+    @Override
+    public void fail() {
+        leave();
     }
 
     public void shutdownKademliaNode() {
@@ -279,6 +305,15 @@ public class KademliaNode {
             refreshBucket(i);
         }
         logger.debug("[{}]  Joined KadNetwork!", self);
+    }
+
+    public void join(String ip, int port) {
+        NodeReference bootstrap = new NodeReference(ip, port);
+        try {
+            join(bootstrap);
+        } catch (IOException e) {
+            logger.error("[{}]  Error while joining network: {}", self, e.toString());
+        }
     }
 
     /**

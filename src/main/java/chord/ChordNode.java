@@ -1,6 +1,7 @@
 package chord;
 
 import com.google.common.annotations.VisibleForTesting;
+import dht.DHTNodeInterface;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -15,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static chord.Util.*;
 
-public class ChordNode {
+public class ChordNode implements DHTNodeInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(ChordNode.class);
 
@@ -34,7 +35,7 @@ public class ChordNode {
     private TimerTask stabilizationTimerTask;
 
     @VisibleForTesting
-    public static int m = 4; // [0-2^m) ids
+    public static int m = 16; // [0-2^m) ids
 
     public static int STABILIZATION_INTERVAL = 2000;
 
@@ -67,37 +68,25 @@ public class ChordNode {
         }
     }
 
-    @VisibleForTesting
-    public void simulateFail() {
+    @Override
+    public void fail() {
         stopServer();
         stopFixThread();
+    }
+
+    @Override
+    public String getIp() {
+        return node.ip;
+    }
+
+    @Override
+    public int getPort() {
+        return node.port;
     }
 
     public void shutdownChordNode()  {
         stopFixThread();
         stopServer();
-    }
-
-
-    /**
-     * To be used in bash run or main method run to keep the network running
-     * <p><b>Code example:</b>
-     * <pre>
-     * {@code
-     *         ChordNode bootstrap = new ChordNode("localhost", 9100);
-     *         bootstrap.createRing();
-     *         for (int i = 9101; i < 9110 ; i++) {
-     *             ChordNode n = new ChordNode("localhost", i);
-     *             n.join(bootstrap);
-     *         }
-     *         bootstrap.blockUntilShutdown();
-     * }
-     * </pre>
-     */
-    public void blockUntilShutdown() throws InterruptedException {
-        if (server != null) {
-            server.awaitTermination();
-        }
     }
 
     public int getDataSize() {
@@ -207,6 +196,19 @@ public class ChordNode {
         logger.debug("Node [{}] created a new ChordRing with id range [0, {})", node, BigInteger.valueOf(2).pow(m));
     }
 
+    @Override
+    public void init() {
+        try {
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        logger.warn("Server started, listening on {}", node.port);
+        startFixThread();
+        logger.debug("Node [{}] created a new ChordRing with id range [0, {})", node, BigInteger.valueOf(2).pow(m));
+    }
+
     /**
      * Join an existing Chord ring
      */
@@ -214,6 +216,23 @@ public class ChordNode {
         server.start();
         logger.warn("Server started, listening on {}", node.port);
         initFingerTable(n_.node);
+        updateOthers();
+        moveKeys_RPC(); //from the range (predecessor,n] from successor
+        startFixThread();
+        logger.debug("Node [{}] joined the network", node);
+        printStatus();
+    }
+
+    @Override
+    public void join(String ip, int port) {
+        try {
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        logger.warn("Server started, listening on {}", node.port);
+        initFingerTable(new NodeReference(ip, port));
         updateOthers();
         moveKeys_RPC(); //from the range (predecessor,n] from successor
         startFixThread();
@@ -983,28 +1002,4 @@ public class ChordNode {
         return fingerTable.get(0).node;
     }
 
-    public static void main(String[] args) throws Exception {
-        ChordNode.STABILIZATION_INTERVAL = 2000;
-        ChordNode.m = 4;
-
-        ChordNode bootstrap = new ChordNode("localhost", 9000);
-        bootstrap.createRing();
-
-        ChordNode n1 = new ChordNode("localhost", 9003);
-        n1.join(bootstrap);
-
-        ChordNode n2 = new ChordNode("localhost", 9004);
-        n2.join(bootstrap);
-
-        ChordNode n3 = new ChordNode("localhost", 9005);
-        n3.join(bootstrap);
-
-
-        Thread.sleep(5000);
-
-        n1.simulateFail();
-
-
-        bootstrap.blockUntilShutdown();
-    }
 }

@@ -46,7 +46,7 @@ public class RecoveryTest extends BaseTest {
         for (int i = 0; i < 5; i++) {
             Thread.sleep(PastryNode.STABILIZATION_INTERVAL * 2L);
             PastryNode node = runningNodes.get(new Random().nextInt(runningNodes.size()));
-            node.leavePastry();
+            node.leave();
             runningNodes.remove(node);
         }
 
@@ -82,7 +82,7 @@ public class RecoveryTest extends BaseTest {
         // eventual delivery is guaranteed unless |L|/2 nodes with adjacent nodeIds fail simultaneously
         for (int i = 0; i < 5; i++) {
             PastryNode node = runningNodes.get(new Random().nextInt(runningNodes.size()));
-            node.leavePastry();
+            node.leave();
             runningNodes.remove(node);
         }
 
@@ -113,7 +113,7 @@ public class RecoveryTest extends BaseTest {
         registerAllRunningNodes(bootstrap, node1, node2, node3);
 
         Thread.sleep(PastryNode.STABILIZATION_INTERVAL * 2L);
-        node2.shutdownPastryNode();
+        node2.fail();
         Thread.sleep(PastryNode.STABILIZATION_INTERVAL * 2L);
 
         // assert that node2 was deleted from all NodeStates

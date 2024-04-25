@@ -45,7 +45,7 @@ public class BaseTest {
     @BeforeEach
     public void init() {
         PastryNode.setStabiliation(false);
-        PastryNode.setBase(BASE_4_IDS);
+        PastryNode.setB(BASE_4_IDS);
         PastryNode.setLeafSize(LEAF_SET_SIZE_8);
         MAX_NODES = isRunningInCI() ? 10 : 50;
         MAX_KEYS = 2 * MAX_NODES;
@@ -54,7 +54,7 @@ public class BaseTest {
     @AfterEach
     public void tearDown() {
         for (PastryNode node : runningNodes) {
-            node.shutdownPastryNode();
+            node.fail();
         }
         runningNodes.clear();
     }

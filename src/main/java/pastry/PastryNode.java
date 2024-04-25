@@ -1,6 +1,7 @@
 package pastry;
 
 import com.google.common.annotations.VisibleForTesting;
+import dht.DHTNodeInterface;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import static pastry.Constants.*;
 import static proto.Pastry.ForwardRequest.RequestType.*;
 import static proto.Pastry.ForwardResponse.StatusCode.*;
 
-public class PastryNode {
+public class PastryNode implements DHTNodeInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(PastryNode.class);
     /**
@@ -96,11 +97,18 @@ public class PastryNode {
 //        return distanceCalculator;
 //    }
 
-    public static void setBase(int b) {
+    public static void setB(int b) {
         if (b != BASE_4_IDS && b != Constants.BASE_16_IDS) {
-            throw new IllegalArgumentException("B must be 2, 3 or 4");
+            throw new IllegalArgumentException("B must be 2 or 4");
         }
         PastryNode.B_PARAMETER = b;
+    }
+
+    public static void setBase(int base) {
+        if (base != 4 && base != 16) {
+            throw new IllegalArgumentException("ID base must be 4 or 16");
+        }
+        PastryNode.B_PARAMETER = base==4 ? BASE_4_IDS : BASE_16_IDS;
     }
 
     public static void setLeafSize(int size) {
@@ -150,6 +158,25 @@ public class PastryNode {
         if(stabilization) {
             startStabilizationThread();
         }
+    }
+
+    @Override
+    public void init() {
+        try {
+            initPastry();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public String getIp() {
+        return self.getIp();
+    }
+
+    @Override
+    public int getPort() {
+        return self.getPort();
     }
 
     /**
@@ -207,7 +234,8 @@ public class PastryNode {
         stabilizationTimer.schedule(stabilizationTimerTask,1000, STABILIZATION_INTERVAL);
     }
 
-    public void leavePastry() {
+    @Override
+    public void leave() {
         // local data should be moved before leaving
 
         boolean keysSent = false;
@@ -282,6 +310,11 @@ public class PastryNode {
         stabilizationTimer.cancel();
     }
 
+    @Override
+    public void fail() {
+        shutdownPastryNode();
+    }
+
     private void startServer() throws IOException {
         server.start();
         logger.warn("[{}]  Server started, listening on {}", self, self.port);
@@ -341,6 +374,15 @@ public class PastryNode {
 
         // this is not in actual Pastry API, it is however used to verify that we have reached the actual CLOSEST node
         return closest;
+    }
+
+    @Override
+    public void join(String ip, int port) {
+        try {
+            joinPastry(new NodeReference(ip, port, 0L, 0L));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -437,7 +479,8 @@ public class PastryNode {
         }
     }
 
-    public NodeReference put(String key, String value) {
+    @Override
+    public void put(String key, String value) {
         String keyHash = Util.getId(key);
 
         NodeReference closest = route(keyHash);
@@ -450,10 +493,25 @@ public class PastryNode {
         blockingStub = PastryServiceGrpc.newBlockingStub(channel);
         Pastry.NodeReference owner = blockingStub.forward(putReq.build()).getOwner();
         channel.shutdown();
+    }
 
+    public NodeReference putWithNode(String key, String value) {
+        String keyHash = Util.getId(key);
+
+        NodeReference closest = route(keyHash);
+
+        Pastry.ForwardRequest.Builder putReq = Pastry.ForwardRequest.newBuilder()
+                .setKey(keyHash)
+                .setValue(value)
+                .setRequestType(PUT);
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(closest.getAddress()).usePlaintext().build();
+        blockingStub = PastryServiceGrpc.newBlockingStub(channel);
+        Pastry.NodeReference owner = blockingStub.forward(putReq.build()).getOwner();
+        channel.shutdown();
         return new NodeReference(owner);
     }
 
+    @Override
     public String get(String key) {
         String keyHash = Util.getId(key);
 
@@ -466,11 +524,14 @@ public class PastryNode {
         blockingStub = PastryServiceGrpc.newBlockingStub(channel);
         String value = blockingStub.forward(getRequest.build()).getValue();
         channel.shutdown();
-
+        if (value.isEmpty()) {
+            return null;
+        }
         return value;
     }
 
-    public Pastry.ForwardResponse.StatusCode delete(String key) {
+    @Override
+    public void delete(String key) {
         String keyHash = Util.getId(key);
 
         NodeReference closest = route(keyHash);
@@ -482,7 +543,20 @@ public class PastryNode {
         blockingStub = PastryServiceGrpc.newBlockingStub(channel);
         Pastry.ForwardResponse.StatusCode status = blockingStub.forward(deleteRequest.build()).getStatusCode();
         channel.shutdown();
+    }
 
+    public Pastry.ForwardResponse.StatusCode deleteWithStatus(String key) {
+        String keyHash = Util.getId(key);
+
+        NodeReference closest = route(keyHash);
+
+        Pastry.ForwardRequest.Builder deleteRequest = Pastry.ForwardRequest.newBuilder()
+                .setKey(keyHash)
+                .setRequestType(DELETE);
+        ManagedChannel channel = ManagedChannelBuilder.forTarget(closest.getAddress()).usePlaintext().build();
+        blockingStub = PastryServiceGrpc.newBlockingStub(channel);
+        Pastry.ForwardResponse.StatusCode status = blockingStub.forward(deleteRequest.build()).getStatusCode();
+        channel.shutdown();
         return status;
     }
 
@@ -619,8 +693,13 @@ public class PastryNode {
                         } finally {
                             lock.unlock();
                         }
-                        logger.info("[{}]  retrieved key {}", self, keyHash);
-                        response.setValue(value).setStatusCode(RETRIEVED);
+                        if (value == null) {
+                            response.setStatusCode(NOT_FOUND);
+                            logger.info("[{}]  key {} not found", self, keyHash);
+                        } else {
+                            response.setValue(value).setStatusCode(RETRIEVED);
+                            logger.info("[{}]  retrieved key {}", self, keyHash);
+                        }
                         break;
                     case DELETE:
                         String rem;

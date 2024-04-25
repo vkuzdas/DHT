@@ -63,7 +63,7 @@ class ChordNodeTest {
 
         Thread.sleep(4L * ChordNode.STABILIZATION_INTERVAL); // let network stabilize
 
-        n1.simulateFail();
+        n1.fail();
 
         Thread.sleep(4L * ChordNode.STABILIZATION_INTERVAL); // let network stabilize again
 
