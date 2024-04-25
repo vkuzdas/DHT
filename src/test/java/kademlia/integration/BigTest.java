@@ -229,7 +229,7 @@ public class BigTest extends BigTestBase {
             }
         });
 
-        bootstrap.shutdownKademliaNode();
+        bootstrap.shutdown();
         runningNodes.remove(bootstrap);
 
 
@@ -278,7 +278,7 @@ public class BigTest extends BigTestBase {
             }
         });
 
-        bootstrap.shutdownKademliaNode();
+        bootstrap.shutdown();
         runningNodes.remove(bootstrap);
 
 

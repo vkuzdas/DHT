@@ -169,6 +169,8 @@ public class PastryNode implements DHTNodeInterface {
         }
     }
 
+
+
     @Override
     public String getIp() {
         return self.getIp();
@@ -281,7 +283,7 @@ public class PastryNode implements DHTNodeInterface {
 
         localData.clear();
 
-        shutdownPastryNode();
+        shutdown();
     }
 
     private void sendKeysTo(NodeReference destination, TreeMap<BigInteger, String> successorKeys) {
@@ -305,14 +307,15 @@ public class PastryNode implements DHTNodeInterface {
         }
     }
 
-    public void shutdownPastryNode() {
+    @Override
+    public void shutdown() {
         stopServer();
         stabilizationTimer.cancel();
     }
 
     @Override
     public void fail() {
-        shutdownPastryNode();
+        shutdown();
     }
 
     private void startServer() throws IOException {

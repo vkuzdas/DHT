@@ -84,7 +84,8 @@ public class ChordNode implements DHTNodeInterface {
         return node.port;
     }
 
-    public void shutdownChordNode()  {
+    @Override
+    public void shutdown()  {
         stopFixThread();
         stopServer();
     }

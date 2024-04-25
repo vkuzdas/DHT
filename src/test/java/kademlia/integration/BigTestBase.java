@@ -45,7 +45,7 @@ public class BigTestBase {
     @AfterEach
     public void tearDown() {
         for (KademliaNode node : runningNodes) {
-            node.shutdownKademliaNode();
+            node.shutdown();
         }
         runningNodes.clear();
     }

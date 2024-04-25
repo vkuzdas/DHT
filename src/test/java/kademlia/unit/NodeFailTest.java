@@ -28,7 +28,7 @@ public class NodeFailTest extends BaseTest {
         int index = boostrap.getRoutingTable().getBucketIndex(joiner.getNodeReference().getId());
         assertTrue(boostrap.getRoutingTable().getKBucket(index).contains(joiner.getNodeReference()));
 
-        joiner.shutdownKademliaNode();
+        joiner.shutdown();
         runningNodes.remove(joiner);
 
         // join triggers nodeLookup and multicastFindNode, when joiner does not respond, it should be removed from bootstraps routing table

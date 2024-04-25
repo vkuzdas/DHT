@@ -1,6 +1,5 @@
 package chord;
 
-import chord.ChordNode;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class BigTest {
     @AfterEach
     void tearDown() {
         for (ChordNode node : runningNodes) {
-            node.shutdownChordNode();
+            node.shutdown();
         }
         runningNodes.clear();
     }

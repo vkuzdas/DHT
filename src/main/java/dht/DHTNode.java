@@ -108,6 +108,11 @@ public class DHTNode implements DHTNodeInterface{
     }
 
     @Override
+    public void shutdown() {
+        this.dhtNode.shutdown();
+    }
+
+    @Override
     public String getIp() {
         return this.dhtNode.getIp();
     }

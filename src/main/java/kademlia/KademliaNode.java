@@ -225,7 +225,7 @@ public class KademliaNode implements DHTNodeInterface {
     @Override
     public void leave() {
         logger.warn("[{}]  Leaves the network", self);
-        shutdownKademliaNode();
+        shutdown();
     }
 
     @Override
@@ -233,7 +233,8 @@ public class KademliaNode implements DHTNodeInterface {
         leave();
     }
 
-    public void shutdownKademliaNode() {
+    @Override
+    public void shutdown() {
         logger.warn("[{}]  Initiated node shutdown!", self);
         stopServer();
         descheduleAll();

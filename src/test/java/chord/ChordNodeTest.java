@@ -37,7 +37,7 @@ class ChordNodeTest {
 
     @AfterEach
     void tearDown() {
-        toShutdown.forEach(ChordNode::shutdownChordNode);
+        toShutdown.forEach(ChordNode::shutdown);
     }
 
     private void registerForShutdown(ChordNode ... nodes) {

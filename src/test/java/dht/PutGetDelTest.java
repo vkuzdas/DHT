@@ -1,6 +1,8 @@
 package dht;
 
-import org.junit.jupiter.api.Test;
+import kademlia.KademliaNode;
+import kademlia.unit.BaseTest;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pastry.metric.PortDifferenceDistanceCalculator;
@@ -14,13 +16,27 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class PutGetDelTest {
 
+    protected static final Logger logger = LoggerFactory.getLogger(PutGetDelTest.class);
     protected static int BASE_PORT = 11_000;
     protected static String LOCAL_IP = "localhost";
     protected final Random random = new Random();
     protected final ArrayList<DHTNode> runningNodes = new ArrayList<>();
 
+    @BeforeEach
+    public void init(TestInfo testInfo) {
+        logger.warn(System.lineSeparator() + System.lineSeparator()+ "============== {} =============" + System.lineSeparator(), testInfo.getDisplayName());
+    }
+
+    @AfterEach
+    public void tearDown() {
+        for (DHTNode node : runningNodes) {
+            node.shutdown();
+        }
+        runningNodes.clear();
+    }
+
     /**
-     * Init and run <i>nodes</i> number of nodes of given type. Nodes join using random bootstrap.
+     * Initialize and run <i>nodes</i> number of nodes of given type. Nodes join using random bootstrap.
      */
     public void runNodesOfType(int nodes, DHTType type) {
         for (int i = 0; i < nodes; i++) {
@@ -52,6 +68,7 @@ public class PutGetDelTest {
     }
 
     @Test
+    @Order(1)
     public void test10_defaultKademlia() {
         runNodesOfType(10, DHTType.Kademlia);
 
@@ -63,6 +80,7 @@ public class PutGetDelTest {
     }
 
     @Test
+    @Order(2)
     public void test10_defaultPastry() {
         runNodesOfType(10, DHTType.Pastry);
 
@@ -74,6 +92,7 @@ public class PutGetDelTest {
     }
 
     @Test
+    @Order(3)
     public void test10_defaultChord() {
         runNodesOfType(10, DHTType.Chord);
 

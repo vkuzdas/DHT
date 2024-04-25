@@ -98,7 +98,7 @@ public class PutRepublishTest extends BaseTest {
         assertNull(runningNodes.get(runningNodes.size()-1).getLocalData().get(Util.getId("key")));
 
         // simulate fail on one of the storing nodes
-        runningNodes.get(1).shutdownKademliaNode();
+        runningNodes.get(1).shutdown();
         runningNodes.remove(1);
 
         // after the republish interval, key should be present on the last
