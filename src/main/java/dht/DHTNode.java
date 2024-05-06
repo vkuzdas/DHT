@@ -6,6 +6,7 @@ import pastry.PastryNode;
 import pastry.metric.DistanceCalculator;
 
 import java.time.Duration;
+import java.util.Random;
 
 /**
  * Distributed Hash Table wrapper <br>
@@ -58,7 +59,7 @@ public class DHTNode implements DHTNodeInterface{
                 this.dhtNode = new ChordNode(ip, port);
                 break;
             case Pastry:
-                this.dhtNode = new PastryNode(ip, port, 0, 0);
+                this.dhtNode = new PastryNode(ip, port, new Random().nextLong(), new Random().nextLong());
                 break;
             case Kademlia:
                 this.dhtNode = new KademliaNode(ip, port);
