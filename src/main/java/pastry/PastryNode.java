@@ -139,8 +139,8 @@ public class PastryNode implements DHTNodeInterface {
         return state.getAllNodes();
     }
 
-    @VisibleForTesting
-    public NavigableMap<BigInteger, String> getLocalData() {
+    @Override
+    public Map<BigInteger, String> getLocalData() {
         lock.lock();
         try {
             return new TreeMap<>(localData);
@@ -148,7 +148,6 @@ public class PastryNode implements DHTNodeInterface {
             lock.unlock();
         }
     }
-
 
 
     public void initPastry() throws IOException {
@@ -169,7 +168,14 @@ public class PastryNode implements DHTNodeInterface {
         }
     }
 
-
+    @Override
+    public void blockUntilShutdown() {
+        try {
+            server.awaitTermination();
+        } catch (InterruptedException e) {
+            logger.error("[{}]  Server interrupted: {}", self, e.toString());
+        }
+    }
 
     @Override
     public String getIp() {

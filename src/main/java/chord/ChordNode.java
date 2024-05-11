@@ -69,6 +69,20 @@ public class ChordNode implements DHTNodeInterface {
     }
 
     @Override
+    public void blockUntilShutdown() {
+        try {
+            server.awaitTermination();
+        } catch (InterruptedException e) {
+            logger.error("[{}]  Server interrupted: {}", this.node, e.toString());
+        }
+    }
+
+    @Override
+    public Map<BigInteger, String> getLocalData() {
+        return localData;
+    }
+
+    @Override
     public void fail() {
         stopServer();
         stopFixThread();

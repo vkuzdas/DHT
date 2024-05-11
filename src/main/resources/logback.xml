@@ -6,6 +6,8 @@
     </appender>
 
     <logger name="io.grpc" level="OFF" />
+    <logger name="io.javalin" level="OFF" />
+    <logger name="org.eclipse.jetty" level="OFF" />
 
     <root level="debug">
     <!--    TRACE = everything else -->

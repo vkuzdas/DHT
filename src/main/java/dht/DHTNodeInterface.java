@@ -1,6 +1,13 @@
 package dht;
 
+import java.math.BigInteger;
+import java.util.Map;
+
 public interface DHTNodeInterface {
+
+    void blockUntilShutdown();
+
+    Map<BigInteger, String> getLocalData();
 
     String getIp();
     int getPort();

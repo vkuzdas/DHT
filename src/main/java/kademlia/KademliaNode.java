@@ -181,7 +181,7 @@ public class KademliaNode implements DHTNodeInterface {
         return routingTable;
     }
 
-    @VisibleForTesting
+    @Override
     public Map<BigInteger, String> getLocalData() {
         return localData;
     }
@@ -204,6 +204,15 @@ public class KademliaNode implements DHTNodeInterface {
             initKademlia();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void blockUntilShutdown() {
+        try {
+            server.awaitTermination();
+        } catch (InterruptedException e) {
+            logger.error("[{}]  Server interrupted: {}", self, e.toString());
         }
     }
 
