@@ -1,4 +1,4 @@
-# DHT (Distributed Hash Table)
+# DHT (Distributed Hash Table) library
 
 ## Description
 
